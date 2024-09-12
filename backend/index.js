@@ -88,7 +88,7 @@ app.post(
     }
 
     // Retrieve validated length, default to 8 if not provided
-    const length = req.body.length || 8;
+    const length = 8;
     const password = generatePassword(length);
     res.json({ password });
   }
