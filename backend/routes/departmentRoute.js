@@ -26,7 +26,7 @@ router.post("/", async (request, response) => {
 
     const department = await Department.create(newDepartment);
 
-    return response.status(201).send(department);
+    return response.status(201).json(department);
   } catch (error) {
     console.log(error.message);
     response.status(500).send({ message: error.message });
@@ -82,12 +82,10 @@ router.put("/:id", async (request, response) => {
     // Save updated department
     await department.save();
 
-    return response
-      .status(200)
-      .json({
-        message: "Department details updated successfully",
-        updatedDepartment: department,
-      });
+    return response.status(200).json({
+      message: "Department details updated successfully",
+      updatedDepartment: department,
+    });
   } catch (error) {
     console.log(error.message);
     response.status(500).send({ message: "Error updating department details" });
