@@ -1,7 +1,9 @@
 import express from "express";
 import mongoose from "mongoose";
 import cors from "cors";
-import helmet from "helmet"; // Import helmet
+import helmet from "helmet";
+import csurf from "csurf";
+import session from "express-session"; // Import express-session
 import { PORT, mongoDBURL } from "./config.js";
 import inventoryRoute from "./routes/inventoryRoute.js";
 import wasteRoute from "./routes/wasteRoute.js";
@@ -27,46 +29,76 @@ const app = express();
 // Use Helmet to secure the app by setting various HTTP headers
 app.use(
   helmet({
-    noSniff: true, // Enable X-Content-Type-Options: nosniff
-    // other helmet options if needed
+    contentSecurityPolicy: false,
+    frameguard: { action: "deny" },
+    noSniff: true,
+    xssFilter: true,
   })
 );
 
 // Allow express to use JSON
 app.use(express.json());
 
-// Configure CORS policy
+// Session configuration
 app.use(
-  cors({
-    origin: ["http://localhost:5173"], // Allow only trusted domains
-    methods: ["GET", "POST", "PUT", "DELETE"], // Restrict methods
-    allowedHeaders: ["Content-Type", "Authorization"], // Restrict headers
-    credentials: true, // If credentials (cookies, HTTP authentication) are needed
+  session({
+    secret: "your-secret-key", // Replace with your own secret
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production", // Use secure cookies in production
+      sameSite: "strict", // Helps prevent CSRF attacks
+    },
   })
 );
 
-// Define your routes
-app.get("/", (req, res) => {
-  console.log(req);
-  return res.status(200).send("Welcome to MERN tutorial");
+// CSRF protection middleware
+const csrfProtection = csurf({
+  cookie: false, // Use session to store CSRF tokens
 });
 
-app.use("/inventory", inventoryRoute);
-app.use("/waste", wasteRoute);
-app.use("/teaLeaves", teaLeavesRoute);
-app.use("/productions", productionScheduleRoute);
-app.use("/teatypes", teatypeManagementRoute);
-app.use("/machines", machineRoute);
-app.use("/maintenances", maintenanceRoute);
-app.use("/orders", orderRoute);
-app.use("/payments", payments);
-app.use("/paymentsEmployee", paymentsEmployee);
-app.use("/orderPayments", orderPayments);
-app.use("/vehicles", vehicleRoute);
-app.use("/suppliers", supplierRoute);
-app.use("/supplyrecords", supplyrecordRoute);
-app.use("/departments", departmentRoute);
-app.use("/employees", employeeRoute);
+// Configure CORS policy
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
+
+// Apply CSRF protection after session middleware
+app.use(csrfProtection);
+
+// Define your routes
+app.get("/", (req, res) => {
+  res.status(200).send("Welcome to MERN tutorial");
+});
+
+// Example of a route that needs CSRF token
+app.get("/form", (req, res) => {
+  // Send CSRF token to the client
+  res.json({ csrfToken: req.csrfToken() });
+});
+
+// Protect routes by adding csrfProtection middleware
+app.use("/inventory", csrfProtection, inventoryRoute);
+app.use("/waste", csrfProtection, wasteRoute);
+app.use("/teaLeaves", csrfProtection, teaLeavesRoute);
+app.use("/productions", csrfProtection, productionScheduleRoute);
+app.use("/teatypes", csrfProtection, teatypeManagementRoute);
+app.use("/machines", csrfProtection, machineRoute);
+app.use("/maintenances", csrfProtection, maintenanceRoute);
+app.use("/orders", csrfProtection, orderRoute);
+app.use("/payments", csrfProtection, payments);
+app.use("/paymentsEmployee", csrfProtection, paymentsEmployee);
+app.use("/orderPayments", csrfProtection, orderPayments);
+app.use("/vehicles", csrfProtection, vehicleRoute);
+app.use("/suppliers", csrfProtection, supplierRoute);
+app.use("/supplyrecords", csrfProtection, supplyrecordRoute);
+app.use("/departments", csrfProtection, departmentRoute);
+app.use("/employees", csrfProtection, employeeRoute);
 
 // Serve static files
 app.use("/uploads", express.static("uploads"));
@@ -74,20 +106,17 @@ app.use("/uploads", express.static("uploads"));
 // Example usage of generatePassword function
 app.post(
   "/generate_password",
-  // Validation middleware
   body("length")
     .optional()
-    .isInt({ min: 8, max: 128 }) // Validate that length is an integer between 8 and 128
+    .isInt({ min: 8, max: 128 })
     .withMessage("Length must be an integer between 8 and 128")
-    .toInt(), // Convert validated length to integer
+    .toInt(),
+  csrfProtection,
   (req, res) => {
-    // Check validation results
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
-
-    // Retrieve validated length, default to 8 if not provided
     const length = 8;
     const password = generatePassword(length);
     res.json({ password });
