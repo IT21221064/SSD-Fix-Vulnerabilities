@@ -78,7 +78,8 @@ app.post(
   body("length")
     .optional()
     .isInt({ min: 8, max: 128 }) // Validate that length is an integer between 8 and 128
-    .withMessage("Length must be an integer between 8 and 128"),
+    .withMessage("Length must be an integer between 8 and 128")
+    .toInt(), // Convert validated length to integer
   (req, res) => {
     // Check validation results
     const errors = validationResult(req);
@@ -86,12 +87,13 @@ app.post(
       return res.status(400).json({ errors: errors.array() });
     }
 
-    // Retrieve validated length
-    const length = parseInt(req.body.length, 10) || 8;
+    // Retrieve validated length, default to 8 if not provided
+    const length = 8;
     const password = generatePassword(length);
     res.json({ password });
   }
 );
+
 // Connect to MongoDB and start the server
 mongoose
   .connect(mongoDBURL)
