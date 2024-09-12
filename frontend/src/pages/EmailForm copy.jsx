@@ -1,21 +1,29 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import Spinner from '../components/Spinner';
-import { Link } from 'react-router-dom';
-import Footer from '../components/Footer';
-import NavigationBar from '../components/NavigationBar';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import Spinner from "../components/Spinner";
+import { Link } from "react-router-dom";
+import Footer from "../components/Footer";
+import NavigationBar from "../components/NavigationBar";
+
+// Function to sanitize the image path
+const sanitizeImagePath = (path) => {
+  if (!path) return ""; // Return empty if path is falsy
+  // Remove any dangerous characters (basic example)
+  const sanitizedPath = path.replace(/[^a-zA-Z0-9._-]/g, "");
+  return sanitizedPath;
+};
 
 const EmailForm = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterOption, setFilterOption] = useState('EmployeeMangeAdmin'); // New state for filter option
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterOption, setFilterOption] = useState("EmployeeMangeAdmin");
   const [filteredEmployees, setFilteredEmployees] = useState([]);
 
   useEffect(() => {
     setLoading(true);
     axios
-      .get('http://localhost:5555/employees')
+      .get("http://localhost:5555/employees")
       .then((response) => {
         setEmployees(response.data.data);
         setLoading(false);
@@ -28,13 +36,13 @@ const EmailForm = () => {
 
   useEffect(() => {
     const filtered = employees.filter((employee) => {
-      if (filterOption === 'All') {
+      if (filterOption === "All") {
         return true;
       } else {
         return employee.employeeRoles === filterOption;
       }
     });
-  
+
     setFilteredEmployees(
       filtered.filter((employee) =>
         employee.employeeName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -43,77 +51,104 @@ const EmailForm = () => {
   }, [searchTerm, employees, filterOption]);
 
   useEffect(() => {
-    // Retrieve emailSent status and sendDate from local storage and update filteredEmployees
-    const storedStatus = JSON.parse(localStorage.getItem('emailSentStatus')) || {};
+    const storedStatus =
+      JSON.parse(localStorage.getItem("emailSentStatus")) || {};
     const updatedEmployees = filteredEmployees.map((employee) => ({
       ...employee,
       emailSent: storedStatus[employee.employeeEmail] || false,
-      sendDate: storedStatus[employee.employeeEmail] ? new Date(storedStatus[employee.employeeEmail]).toLocaleString() : null,
+      sendDate: storedStatus[employee.employeeEmail]
+        ? new Date(storedStatus[employee.employeeEmail]).toLocaleString()
+        : null,
     }));
     setFilteredEmployees(updatedEmployees);
   }, [filteredEmployees]);
 
   const sendEmail = async (employeeEmail, index) => {
     try {
-      await axios.post('http://localhost:5555/employees/send_email', {
+      await axios.post("http://localhost:5555/employees/send_email", {
         employeeEmail: employeeEmail,
-        subject: 'Invitation to Login',
-        text: 'You have been invited to login to the Employee Management System. Please follow the link provided to create your account.',
+        subject: "Invitation to Login",
+        text: "You have been invited to login to the Employee Management System. Please follow the link provided to create your account.",
       });
       const updatedEmployees = [...filteredEmployees];
-      updatedEmployees[index].emailSent = true; // Update emailSent status for the employee
-      updatedEmployees[index].sendDate = new Date().toLocaleString(); // Update sendDate for the employee
+      updatedEmployees[index].emailSent = true;
+      updatedEmployees[index].sendDate = new Date().toLocaleString();
       setFilteredEmployees(updatedEmployees);
-      // Store emailSent status and sendDate in local storage
-      const storedStatus = JSON.parse(localStorage.getItem('emailSentStatus')) || {};
+
+      const storedStatus =
+        JSON.parse(localStorage.getItem("emailSentStatus")) || {};
       storedStatus[employeeEmail] = new Date().toLocaleString();
-      localStorage.setItem('emailSentStatus', JSON.stringify(storedStatus));
-      alert('Email sent successfully');
+      localStorage.setItem("emailSentStatus", JSON.stringify(storedStatus));
+      alert("Email sent successfully");
     } catch (error) {
-      console.error('Error sending email:', error);
-      alert('Failed to send email');
+      console.error("Error sending email:", error);
+      alert("Failed to send email");
     }
   };
 
-  // Modify the filter options to match exactly with the role selection options
   const filterOptions = [
-    //{ label: 'All', value: 'All' },
-    { label: 'Employee-Mange Admin', value: 'EmployeeMangeAdmin' },
-    { label: 'Inventory Manager', value: 'InventryManager' },
-    { label: 'Vehicle Manager', value: 'VehicleManager' },
-    { label: 'Production Manager', value: 'ProductionManager' },
-    { label: 'Payment Manager', value: 'PaymentManager' },
-    { label: 'Supplier Manager', value: 'SupplierManager' },
-    { label: 'Order Manager', value: 'OrderManager' },
-    { label: 'Maintaince Manager', value: 'MaintainceManager' },
-    // Add more options as needed
+    { label: "Employee-Mange Admin", value: "EmployeeMangeAdmin" },
+    { label: "Inventory Manager", value: "InventryManager" },
+    { label: "Vehicle Manager", value: "VehicleManager" },
+    { label: "Production Manager", value: "ProductionManager" },
+    { label: "Payment Manager", value: "PaymentManager" },
+    { label: "Supplier Manager", value: "SupplierManager" },
+    { label: "Order Manager", value: "OrderManager" },
+    { label: "Maintaince Manager", value: "MaintainceManager" },
   ];
 
   return (
     <div className="flex flex-col h-screen">
       <NavigationBar />
       <div className="flex-grow">
-      <nav style={{ backgroundColor: '#3FC060' }} className="p-4">
-        <div className="container mx-auto flex justify-center items-center">
-          <div className="flex space-x-4">
-            <Link to="/" className="text-black-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Home</Link>
-            <Link to="/EmployeeHome" className="text-black-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Employee List</Link>
-            <Link to="/employees/create" className="text-black-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Register Employee</Link>
-            <Link to="/GenerateRepoEmployee" className="text-black-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Employee Report</Link>
-            <Link to="/EmailForm" className="text-gray-300 bg-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium">Login Invitation</Link>
+        <nav style={{ backgroundColor: "#3FC060" }} className="p-4">
+          <div className="container mx-auto flex justify-center items-center">
+            <div className="flex space-x-4">
+              <Link
+                to="/"
+                className="text-black-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Home
+              </Link>
+              <Link
+                to="/EmployeeHome"
+                className="text-black-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Employee List
+              </Link>
+              <Link
+                to="/employees/create"
+                className="text-black-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Register Employee
+              </Link>
+              <Link
+                to="/GenerateRepoEmployee"
+                className="text-black-300 hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Employee Report
+              </Link>
+              <Link
+                to="/EmailForm"
+                className="text-gray-300 bg-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Login Invitation
+              </Link>
+            </div>
           </div>
-        </div>
-      </nav>
-      <div className='p-4'>
-        <div className='flex justify-between items-center mb-4'>
-          <h1 className='text-3xl'>Department Mangers</h1>
-        </div>
+        </nav>
+        <div className="p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h1 className="text-3xl">Department Managers</h1>
+          </div>
 
-        <div>
-            <label htmlFor="roleFilter" className="font-bold">Filter by Mangers:</label>
+          <div>
+            <label htmlFor="roleFilter" className="font-bold">
+              Filter by Managers:
+            </label>
             <div>
               {filterOptions.map((option) => (
-                <label key={option.value} style={{ marginRight: '10px' }}>
+                <label key={option.value} style={{ marginRight: "10px" }}>
                   <input
                     type="radio"
                     name="roleFilter"
@@ -126,59 +161,103 @@ const EmailForm = () => {
               ))}
             </div>
           </div>
-        
-        {loading ? (
-          <Spinner />
-        ) : (
-          <div className='overflow-x-auto'>
-            <table className='min-w-full divide-y divide-gray-200'>
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider bg-black'>No</th>
-                  
-                  <th className='px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider bg-black'>Image</th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider bg-black'>Employee Name</th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider bg-black'>Email Address</th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider bg-black'>Contact Number</th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider bg-black'>Role</th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider bg-black'>Sent Date</th>
-                  <th className='px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider bg-black'>Action</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {filteredEmployees.map((employee, index) => (
-                  <tr key={employee._employeeId} className="bg-white">
-                  <td className='border px-6 py-4 whitespace-nowrap'>{index + 1}</td>
-                  
-                  <td className='border px-6 py-4 whitespace-nowrap'>
-                      {/* Render image */}
-                      {employee.image ? (
-                        <img src={`http://localhost:5555/${employee.image.replace(/\//g, '\\')}`} alt="Employee" className="h-10 w-10 rounded-full" />
-                      ) : (
-                        <span>No Image</span>
-                      )}
-                    </td>
-                    <td className='border px-6 py-4 whitespace-nowrap'>{employee.employeeName}</td>
-                    <td className='border px-6 py-4 whitespace-nowrap'>{employee.employeeEmail}</td>
-                    <td className='border px-6 py-4 whitespace-nowrap'>{employee.employeeMobile}</td>
-                    <td className='border px-6 py-4 whitespace-nowrap'>{employee.employeeRoles}</td>
-                    <td className='border px-6 py-4 whitespace-nowrap'>{employee.sendDate}</td>
-                    <td className='border px-6 py-4 whitespace-nowrap'>
-                      <div className='flex justify-center gap-x-4'>
-                        {employee.emailSent ? (
-                          <button className="text-gray-300 bg-gray-500 px-3 py-2 rounded-full text-sm font-medium" disabled>Sent URL</button>
-                        ) : (
-                          <button className="text-gray-300 bg-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-full text-sm font-medium" onClick={() => sendEmail(employee.employeeEmail, index)}>Send URL</button>
-                        )}
-                      </div>
-                    </td>
+
+          {loading ? (
+            <Spinner />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider bg-black">
+                      No
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider bg-black">
+                      Image
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider bg-black">
+                      Employee Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider bg-black">
+                      Email Address
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider bg-black">
+                      Contact Number
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider bg-black">
+                      Role
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider bg-black">
+                      Sent Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider bg-black">
+                      Action
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {filteredEmployees.map((employee, index) => (
+                    <tr key={employee._employeeId} className="bg-white">
+                      <td className="border px-6 py-4 whitespace-nowrap">
+                        {index + 1}
+                      </td>
+                      <td className="border px-6 py-4 whitespace-nowrap">
+                        {/* Render sanitized image */}
+                        {employee.image ? (
+                          <img
+                            src={`http://localhost:5555/${sanitizeImagePath(
+                              employee.image
+                            )}`}
+                            alt="Employee"
+                            className="h-10 w-10 rounded-full"
+                          />
+                        ) : (
+                          <span>No Image</span>
+                        )}
+                      </td>
+                      <td className="border px-6 py-4 whitespace-nowrap">
+                        {employee.employeeName}
+                      </td>
+                      <td className="border px-6 py-4 whitespace-nowrap">
+                        {employee.employeeEmail}
+                      </td>
+                      <td className="border px-6 py-4 whitespace-nowrap">
+                        {employee.employeeMobile}
+                      </td>
+                      <td className="border px-6 py-4 whitespace-nowrap">
+                        {employee.employeeRoles}
+                      </td>
+                      <td className="border px-6 py-4 whitespace-nowrap">
+                        {employee.sendDate}
+                      </td>
+                      <td className="border px-6 py-4 whitespace-nowrap">
+                        <div className="flex justify-center gap-x-4">
+                          {employee.emailSent ? (
+                            <button
+                              className="text-gray-300 bg-gray-500 px-3 py-2 rounded-full text-sm font-medium"
+                              disabled
+                            >
+                              Sent URL
+                            </button>
+                          ) : (
+                            <button
+                              className="text-gray-300 bg-black hover:bg-gray-700 hover:text-white px-3 py-2 rounded-full text-sm font-medium"
+                              onClick={() =>
+                                sendEmail(employee.employeeEmail, index)
+                              }
+                            >
+                              Send URL
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
       </div>
       <Footer />
     </div>
