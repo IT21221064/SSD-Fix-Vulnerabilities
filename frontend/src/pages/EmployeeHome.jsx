@@ -1,23 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import Spinner from '../components/Spinner';
-import { Link } from 'react-router-dom';
-import { AiOutlineEdit } from 'react-icons/ai';
-import { BsInfoCircle } from 'react-icons/bs';
-import { MdOutlineAddBox, MdOutlineDelete } from 'react-icons/md';
-import Footer from '../components/Footer';
-import NavigationBar from '../components/NavigationBar';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import Spinner from "../components/Spinner";
+import { Link } from "react-router-dom";
+import { AiOutlineEdit } from "react-icons/ai";
+import { BsInfoCircle } from "react-icons/bs";
+import { MdOutlineAddBox, MdOutlineDelete } from "react-icons/md";
+import Footer from "../components/Footer";
+import NavigationBar from "../components/NavigationBar";
 
 const EmployeeHome = () => {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [filteredEmployees, setFilteredEmployees] = useState([]);
 
   useEffect(() => {
     setLoading(true);
     axios
-      .get('http://localhost:5555/employees')
+      .get("http://localhost:5555/employees")
       .then((response) => {
         setEmployees(response.data.data);
         setFilteredEmployees(response.data.data);
@@ -37,40 +37,68 @@ const EmployeeHome = () => {
     );
   }, [searchTerm, employees]);
 
+  const sanitizeImagePath = (path) => {
+    if (!path) return ""; // Return empty if path is falsy
+    // Remove any dangerous characters (basic example)
+    const sanitizedPath = path.replace(/[^a-zA-Z0-9._-]/g, "");
+    return sanitizedPath;
+  };
+
   return (
-    <div className="employee-home-container"> {/* Add this container */}
+    <div className="employee-home-container">
+      {" "}
+      {/* Add this container */}
       <NavigationBar />
-      <nav style={{ backgroundColor: '#3FC060' }} className="p-4">
+      <nav style={{ backgroundColor: "#3FC060" }} className="p-4">
         <div className="container mx-auto flex justify-center items-center">
           <div className="flex space-x-4">
-            <Link to="/" className="nav-link">Home</Link>
-            <Link to="/EmployeeHome" className="nav-link active">Employee List</Link>
-            <Link to="/employees/create" className="nav-link">Register Employee</Link>
-            <Link to="/GenerateRepoEmployee" className="nav-link">Employee Report</Link>
-            <Link to="/EmailForm" className="nav-link">Login Invitation</Link>
+            <Link to="/" className="nav-link">
+              Home
+            </Link>
+            <Link to="/EmployeeHome" className="nav-link active">
+              Employee List
+            </Link>
+            <Link to="/employees/create" className="nav-link">
+              Register Employee
+            </Link>
+            <Link to="/GenerateRepoEmployee" className="nav-link">
+              Employee Report
+            </Link>
+            <Link to="/EmailForm" className="nav-link">
+              Login Invitation
+            </Link>
           </div>
         </div>
       </nav>
-
-      <div className='p-4'>
-        <div className='flex justify-between items-center mb-4'>
-          <h1 className='text-4xl' style={{ marginTop: '40px',color: 'white'}}>Employee List</h1>
+      <div className="p-4">
+        <div className="flex justify-between items-center mb-4">
+          <h1
+            className="text-4xl"
+            style={{ marginTop: "40px", color: "white" }}
+          >
+            Employee List
+          </h1>
           <div className="flex items-center">
             <input
-              type='text'
-              placeholder='Search department name'
+              type="text"
+              placeholder="Search department name"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className='search-input mr-2'
+              className="search-input mr-2"
             />
-            <button className="search-button" onClick={() => console.log("Search clicked")}>Search</button>
+            <button
+              className="search-button"
+              onClick={() => console.log("Search clicked")}
+            >
+              Search
+            </button>
           </div>
         </div>
         {loading ? (
           <Spinner />
         ) : (
-          <div className='overflow-x-auto'>
-            <table className='employee-table'>
+          <div className="overflow-x-auto">
+            <table className="employee-table">
               <thead>
                 <tr>
                   <th>No</th>
@@ -90,7 +118,13 @@ const EmployeeHome = () => {
                     <td>{index + 1}</td>
                     <td>
                       {employee.image ? (
-                        <img src={`http://localhost:5555/${employee.image.replace(/\//g, '\\')}`} alt="Employee" className="employee-image" />
+                        <img
+                          src={`http://localhost:5555/${sanitizeImagePath(
+                            employee.image
+                          )}`}
+                          alt="Employee"
+                          className="block mx-auto h-20 w-20 rounded-full"
+                        />
                       ) : (
                         <span>No Image</span>
                       )}
@@ -102,7 +136,7 @@ const EmployeeHome = () => {
                     <td>{employee.employeeRoles}</td>
                     <td>{new Date(employee.createdOn).toLocaleString()}</td>
                     <td>
-                      <div className='action-icons'>
+                      <div className="action-icons">
                         <Link to={`/employees/details/${employee._id}`}>
                           <BsInfoCircle />
                         </Link>
