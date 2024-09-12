@@ -19,6 +19,7 @@ import supplierRoute from "./routes/supplierRoute.js";
 import supplyrecordRoute from "./routes/supplyrecordRoute.js";
 import departmentRoute from "./routes/departmentRoute.js";
 import employeeRoute from "./routes/employeeRoute.js";
+import { body, validationResult } from "express-validator";
 import { generatePassword } from "./utils/passwordUtils.js";
 
 const app = express();
@@ -71,12 +72,26 @@ app.use("/employees", employeeRoute);
 app.use("/uploads", express.static("uploads"));
 
 // Example usage of generatePassword function
-app.post("/generate_password", (req, res) => {
-  const length = req.body.length || 8;
-  const password = generatePassword(length);
-  res.json({ password });
-});
+app.post(
+  "/generate_password",
+  // Validation middleware
+  body("length")
+    .optional()
+    .isInt({ min: 8, max: 128 }) // Validate that length is an integer between 8 and 128
+    .withMessage("Length must be an integer between 8 and 128"),
+  (req, res) => {
+    // Check validation results
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
 
+    // Retrieve validated length
+    const length = parseInt(req.body.length, 10) || 8;
+    const password = generatePassword(length);
+    res.json({ password });
+  }
+);
 // Connect to MongoDB and start the server
 mongoose
   .connect(mongoDBURL)
