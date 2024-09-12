@@ -5,6 +5,10 @@ import nodemailer from "nodemailer";
 import { Employee } from "../models/employeeModel.js";
 import { generatePassword } from "../utils/passwordUtils.js";
 import bcrypt from "bcrypt";
+import dotenv from "dotenv";
+
+// Load environment variables from .env file
+dotenv.config();
 
 const router = express.Router();
 const __dirname = path.resolve();
@@ -208,8 +212,8 @@ router.delete("/:id", async (request, response) => {
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
-    user: "2001imashaperera@gmail.com",
-    pass: "dxqqgfymqnymblwf",
+    user: process.env.EMAIL_USER, // Use environment variable for email
+    pass: process.env.EMAIL_PASS, // Use environment variable for password
   },
 });
 
