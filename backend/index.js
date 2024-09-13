@@ -25,7 +25,7 @@ import { body, validationResult } from "express-validator";
 import { generatePassword } from "./utils/passwordUtils.js";
 
 const app = express();
-
+app.disable("x-powered-by");
 // Use Helmet to secure the app by setting various HTTP headers
 app.use(
   helmet({
@@ -56,6 +56,7 @@ app.use(
 // CSRF protection middleware
 const csrfProtection = csurf({
   cookie: false, // Use session to store CSRF tokens
+  ignoreMethods: ["GET", "POST"],
 });
 
 // Configure CORS policy
@@ -63,7 +64,7 @@ app.use(
   cors({
     origin: ["http://localhost:5173"],
     methods: ["GET", "POST", "PUT", "DELETE"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "CSRF-Token"],
     credentials: true,
   })
 );
