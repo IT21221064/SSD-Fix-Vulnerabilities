@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import cors from "cors";
 import helmet from "helmet";
 import csurf from "csurf";
-import session from "express-session"; // Import express-session
+import session from "express-session";
 import { PORT, mongoDBURL } from "./config.js";
 import inventoryRoute from "./routes/inventoryRoute.js";
 import wasteRoute from "./routes/wasteRoute.js";
@@ -14,22 +14,37 @@ import machineRoute from "./routes/machineRoute.js";
 import maintenanceRoute from "./routes/maintenanceRoute.js";
 import orderRoute from "./routes/orderRoute.js";
 import payments from "./routes/payment.js";
-import vehicleRoute from "./routes/vehicleRoute.js";
 import paymentsEmployee from "./routes/paymentEmployee.js";
 import orderPayments from "./routes/orderPayments.js";
+import vehicleRoute from "./routes/vehicleRoute.js";
 import supplierRoute from "./routes/supplierRoute.js";
 import supplyrecordRoute from "./routes/supplyrecordRoute.js";
 import departmentRoute from "./routes/departmentRoute.js";
 import employeeRoute from "./routes/employeeRoute.js";
 import { body, validationResult } from "express-validator";
 import { generatePassword } from "./utils/passwordUtils.js";
+import rateLimit from "express-rate-limit";
+import dotenv from "dotenv";
+
+// Load environment variables
+dotenv.config();
 
 const app = express();
 app.disable("x-powered-by");
+
 // Use Helmet to secure the app by setting various HTTP headers
 app.use(
   helmet({
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "blob:"],
+        connectSrc: ["'self'"],
+        fontSrc: ["'self'", "data:"],
+      },
+    },
     frameguard: { action: "deny" },
     noSniff: true,
     xssFilter: true,
@@ -42,7 +57,7 @@ app.use(express.json());
 // Session configuration
 app.use(
   session({
-    secret: "your-secret-key", // Replace with your own secret
+    secret: process.env.SESSION_SECRET || "default-secret-key", // Use environment variable or default secret
     resave: false,
     saveUninitialized: true,
     cookie: {
@@ -71,6 +86,15 @@ app.use(
 
 // Apply CSRF protection after session middleware
 app.use(csrfProtection);
+
+// Set up rate limiting to prevent abuse
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: "Too many requests from this IP, please try again later.",
+});
+
+app.use(limiter);
 
 // Define your routes
 app.get("/", (req, res) => {
@@ -118,7 +142,7 @@ app.post(
     if (!errors.isEmpty()) {
       return res.status(400).json({ errors: errors.array() });
     }
-    const length = 8;
+    const length = 8; // Use provided length or default to 8
     const password = generatePassword(length);
     res.json({ password });
   }
@@ -134,5 +158,11 @@ mongoose
     });
   })
   .catch((error) => {
-    console.log(error);
+    console.log("Error connecting to the database:", error);
   });
+
+// Global error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: "Internal Server Error" });
+});
