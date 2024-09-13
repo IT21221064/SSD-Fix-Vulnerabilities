@@ -19,7 +19,7 @@
     "@mui/icons-material": "^5.15.15",
     "@mui/material": "^5.15.15",
     "@react-pdf/renderer": "^3.4.2",
-    "axios": "^1.6.8",
+    "axios": "^1.7.4",
     "formik": "^2.4.5",
     "jspdf": "^2.5.1",
     "jspdf-autotable": "^3.8.2",
