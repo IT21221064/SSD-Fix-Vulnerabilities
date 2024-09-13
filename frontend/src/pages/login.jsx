@@ -1,62 +1,64 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [csrfToken, setCsrfToken] = useState("");
+
+  useEffect(() => {
+    // Fetch the CSRF token when the component mounts
+    const fetchCsrfToken = async () => {
+      try {
+        const response = await axios.get("http://localhost:5555/form");
+        setCsrfToken(response.data.csrfToken);
+      } catch (error) {
+        console.error("Error fetching CSRF token:", error);
+        setError("Failed to fetch CSRF token");
+      }
+    };
+
+    fetchCsrfToken();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      // Send a request to the server to validate the credentials
-      const response = await axios.post('http://localhost:5555/employees/login', { employeeEmail: email, password });
+      const response = await axios.post(
+        "http://localhost:5555/employees/login",
+        { employeeEmail: email, password },
+        { headers: { "CSRF-Token": csrfToken } } // Include CSRF token in headers
+      );
 
-      // If the request is successful, store the role and redirect the user
-      localStorage.setItem('role', response.data.role);
+      localStorage.setItem("role", response.data.role);
 
-      // Check if the email matches the specific email address for redirection
-      if (email === 'tharusha@gmail.com') {
-        // Redirect to P_home page
-        window.location.href = '/P_home';
-      } else if (email === 'imasha@gmail.com') {
-        // Redirect to P_home page
-        window.location.href = '/E_home';
-      }else if (email === 'ravindu@gmail.com') {
-        // Redirect to P_home page
-        window.location.href = '/V_home';
-      }else if (email === 'nadeen@gmail.com') {
-        // Redirect to P_home page
-        window.location.href = '/O_home';
-      }else if (email === 'dilmi@gmail.com') {
-        // Redirect to P_home page
-        window.location.href = '/M_home';
-      }else if (email === 'kavindu@gmail.com') {
-        // Redirect to P_home page
-        window.location.href = '/S_home';
-      }else if (email === 'susiru@gmail.com') {
-        // Redirect to P_home page
-        window.location.href = '/Py_home';
-      }else if (email === 'yuvindu@gmail.com') {
-        // Redirect to P_home page
-        window.location.href = '/I_home';
-      }
-       else {
-        // Redirect to homepage or other pages based on role
-        // For simplicity, let's assume a generic redirect to homepage
-        window.location.href = '/HomePage';
-      }
+      // Redirect based on email
+      const redirectPath =
+        {
+          "tharusha@gmail.com": "/P_home",
+          "imasha@gmail.com": "/E_home",
+          "ravindu@gmail.com": "/V_home",
+          "nadeen@gmail.com": "/O_home",
+          "dilmi@gmail.com": "/M_home",
+          "kavindu@gmail.com": "/S_home",
+          "susiru@gmail.com": "/Py_home",
+          "yuvindu@gmail.com": "/I_home",
+        }[email] || "/HomePage"; // Default redirect if email does not match
+
+      window.location.href = redirectPath;
     } catch (error) {
-      // If there's an error, display an error message
-      setError('Invalid email or password');
+      setError("Invalid email or password");
     }
   };
 
   return (
     <div className="login-container min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8 bg-white rounded-lg shadow-xl p-8">
-        <h2 className="text-center text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
+        <h2 className="text-center text-3xl font-extrabold text-gray-900">
+          Sign in to your account
+        </h2>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <input type="hidden" name="remember" value="true" />
           <div className="rounded-md shadow-sm -space-y-px">
@@ -104,13 +106,19 @@ const Login = () => {
                 type="checkbox"
                 className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
               />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+              <label
+                htmlFor="remember-me"
+                className="ml-2 block text-sm text-gray-900"
+              >
                 Remember me
               </label>
             </div>
 
             <div className="text-sm">
-              <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+              <a
+                href="#"
+                className="font-medium text-blue-600 hover:text-blue-500"
+              >
                 Forgot your password?
               </a>
             </div>
@@ -131,61 +139,3 @@ const Login = () => {
 };
 
 export default Login;
-
-// CSS styles
-const styles = `
-  .login-container {
-    background-image: url('./public/images/ew.jpg'); /* Replace with your background image path */
-    background-size: cover;
-    background-position: center;
-    width: 100%; /* Adjust width as needed */
-    height: 100vh;
-  }
-
-  .input-field {
-    appearance: none;
-    rounded-none;
-    relative;
-    block;
-    w-full;
-    px-3;
-    py-2;
-    border;
-    border-gray-300;
-    placeholder-gray-500;
-    text-gray-900;
-    rounded-md;
-    focus:outline-none;
-    focus:ring-blue-500;
-    focus:border-blue-500;
-    focus:z-10;
-    sm:text-sm;
-  }
-
-  .submit-button {
-    group;
-    relative;
-    w-full;
-    flex;
-    justify-center;
-    py-3; /* Increase the padding */
-    px-6; /* Increase the padding */
-    border;
-    border-transparent;
-    text-sm;
-    font-medium;
-    rounded-md;
-    text-white;
-    bg-blue-600;
-    hover:bg-blue-700;
-    focus:outline-none;
-    focus:ring-2;
-    focus:ring-offset-2;
-    focus:ring-blue-500;
-  }
-`;
-
-// Inject the styles into the document
-const styleElement = document.createElement('style');
-styleElement.innerHTML = styles;
-document.head.appendChild(styleElement);
