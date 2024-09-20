@@ -1,30 +1,28 @@
 import mongoose from "mongoose";
-
+ 
 const employeeSchema = mongoose.Schema(
     {   
         password: {
             type: String,
             required: false,
         },
-
-
+ 
+ 
         employeeId: {
             type: String, // Store auto-generated employee ID
-            required: true,
+            //required: true,
             unique: true // Ensure employee ID is unique
         },
-
-
+ 
+ 
         image: {
             type: String, // Store image path
         },
-        
         employeeName:{
             type: String,
-            required : true,
+           // required : true,
         },
-
-        
+ 
         
         employeeEmail:{
             type: String,
@@ -33,29 +31,29 @@ const employeeSchema = mongoose.Schema(
         },
         employeeMobile:{
             type: Number,
-            required : true,
+            //required : true,
         },
         employeeAddress:{
             type: String,
-            required : true,
+            //required : true,
         },
-
+ 
         employeeRoles:{
             type: String, // Modify to array of strings
-            required : true,
+            //required : true,
         },
-
+ 
         createdOn:{
             type: Date,
-            required : true,
+           // required : true,
         },
-
+ 
     },
     {
         timestamps: true,
     }
-
+ 
 );
-
-
+ 
+ 
 export const Employee = mongoose.model('employee',employeeSchema);
