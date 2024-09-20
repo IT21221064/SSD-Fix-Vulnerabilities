@@ -29,7 +29,7 @@ router.use('/uploads', express.static('uploads'));
 
 // Setup express-session for OAuth
 router.use(session({
-  secret: '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',
+  secret: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
   resave: false,
   saveUninitialized: true,
 }));
@@ -59,8 +59,8 @@ passport.deserializeUser(async (id, done) => {
   }
 });
 passport.use(new GoogleStrategy({
-  clientID: '646292097148-ipqm7p81lkb2jo6kdrlu5dm10dbg3tjs.apps.googleusercontent.com',
-  clientSecret: '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',
+  clientID: process.env.GOOGLE_OAUTH_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
   callbackURL: 'http://localhost:5555/employees/auth/google/callback',
 }, async (accessToken, refreshToken, profile, done) => {
   try {
